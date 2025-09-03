@@ -67,3 +67,23 @@ frontend/
 ## Notes
 - If you change the frontend base path or output folder, update either Vite’s `base`/`build.outDir` or the backend static mount path accordingly.
 - `dist/` is generated—do not edit files there manually; edit files under `src/` instead and rebuild.
+
+---
+
+# Commit-2
+
+High-level summary of enabling frontend ↔ backend communication.
+
+- Backend
+  - Added a simple POST API at `/api/transform` that accepts `{ text: string }` and returns `{ result: string }` with a minimal transformation.
+  - Kept the React static site mounted at `/app` so built assets resolve correctly (aligned with Vite `base: '/app/'`).
+
+- Frontend
+  - Updated the main UI (`src/App.tsx`) to include:
+    - A label, a textbox for user input, and a submit button.
+    - On submit, a `fetch('/api/transform', { method: 'POST', body: JSON.stringify({ text }) })` call.
+    - Displays the returned `result` string below the form.
+  - Light, elegant styling in `src/style.css` to keep the layout centered and readable without overengineering.
+
+- Result
+  - Users can type a message, submit, and see a transformed response from the FastAPI backend—served together under the same origin, avoiding CORS configuration.

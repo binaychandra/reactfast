@@ -2,6 +2,7 @@
 import pathlib
 from fastapi import FastAPI, Response
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 # Define the FastAPI app
 app = FastAPI()
@@ -44,3 +45,15 @@ app.mount(
     create_frontend_router(),
     name="frontend",
 )
+
+
+# --- Simple API endpoint ---
+class TextIn(BaseModel):
+    text: str
+
+
+@app.post("/api/transform")
+def transform_text(payload: TextIn):
+    # Minimal transformation: uppercase with a prefix
+    modified = f"Hello, {payload.text}"
+    return {"result": modified}
