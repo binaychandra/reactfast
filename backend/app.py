@@ -15,7 +15,7 @@ class TextIn(BaseModel):
 @app.post("/api/transform")
 def transform_text(payload: TextIn):
     # Minimal transformation: uppercase with a prefix
-    modified = f"Hello, {payload.text}"
+    modified = f"Hello {payload.text.capitalize()}! How are you!"
     return {"result": modified}
 
 
