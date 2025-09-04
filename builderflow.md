@@ -87,3 +87,42 @@ High-level summary of enabling frontend ↔ backend communication.
 
 - Result
   - Users can type a message, submit, and see a transformed response from the FastAPI backend—served together under the same origin, avoiding CORS configuration.
+
+---
+
+# Commit-3
+
+High-level summary of adding containerization (Docker) support.
+
+- Purpose
+  - Provide a reproducible build artifact bundling backend (FastAPI) and pre-built frontend (Vite) into one image.
+  - Simplify deployment: single `docker run` serves both API and static UI.
+
+- Dockerfile Structure (multi-stage)
+  - Stage 1 (node:20-alpine): installs frontend deps and runs `npm run build` to produce `dist/`.
+  - Stage 2 (python:3.12-slim): installs backend Python deps, copies backend code and built `frontend/dist`.
+  - Starts with: `uvicorn backend.app:app --host 0.0.0.0 --port 8000`.
+
+- Key Paths Inside Image
+  - `/app/backend` – FastAPI code
+  - `/app/frontend/dist` – Built static assets served by FastAPI at `/app` route
+
+- Added Files
+  - `Dockerfile` – Multi-stage build definition
+  - `.dockerignore` – Excludes node_modules, virtual envs, caches, VCS metadata, logs, etc., reducing context size and image bloat
+
+- Build & Run (local)
+  1. Build image:
+     - `docker build -t reactfast .`
+  2. Run container:
+     - `docker run --rm -p 8000:8000 reactfast`
+  3. Access UI:
+     - `http://localhost:8000/app/`
+
+- Customization Notes
+  - To enable auto-reload in development, run locally without Docker or create a dev Dockerfile variant mounting source.
+  - For production scaling, consider adding a process manager (e.g., `gunicorn` with `uvicorn.workers.UvicornWorker`) and HEALTHCHECK.
+  - Pin dependency versions more strictly if reproducibility across time is critical.
+
+- Outcome
+  - Project can be built and deployed as a single immutable image; frontend and backend remain in sync at build time.
