@@ -7,6 +7,17 @@ from pydantic import BaseModel
 # Define the FastAPI app
 app = FastAPI()
 
+# --- Simple API endpoint ---
+class TextIn(BaseModel):
+    text: str
+
+
+@app.post("/api/transform")
+def transform_text(payload: TextIn):
+    # Minimal transformation: uppercase with a prefix
+    modified = f"Hello, {payload.text}"
+    return {"result": modified}
+
 
 def create_frontend_router(build_dir="frontend/dist"):
     """Creates a router to serve the React frontend.
@@ -41,19 +52,9 @@ def create_frontend_router(build_dir="frontend/dist"):
 
 # Mount the frontend under /app to avoid conflicts and align with Vite base
 app.mount(
-    "/app",
+    "/",
     create_frontend_router(),
     name="frontend",
 )
 
 
-# --- Simple API endpoint ---
-class TextIn(BaseModel):
-    text: str
-
-
-@app.post("/api/transform")
-def transform_text(payload: TextIn):
-    # Minimal transformation: uppercase with a prefix
-    modified = f"Hello, {payload.text}"
-    return {"result": modified}

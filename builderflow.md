@@ -126,3 +126,55 @@ High-level summary of adding containerization (Docker) support.
 
 - Outcome
   - Project can be built and deployed as a single immutable image; frontend and backend remain in sync at build time.
+
+- Pushing the app to Azure Container Registry. Use below commands 
+  -  `docker login` to login to Azure Container Registry
+  -  `docker tag <app_name>:latest <registry-name>.azurecr.io/<app_name>:latest`
+  -  `docker push <registry-name>.azurecr.io/<app_name>:latest`
+  
+
+  # Commit-4
+
+  High-level summary of adding CI automation (GitHub Actions) to build and push the Docker image to Azure Container Registry (ACR).
+
+  - Purpose
+    - Automate image builds on each push to `main` (and manual dispatch) ensuring the registry always has an up‑to‑date image.
+    - Provide traceable image tags (`<commit-sha>` and `latest`) for rollback and promotion.
+
+  - Secrets / Inputs
+    - `AZURE_CREDENTIALS`: JSON from `az ad sp create-for-rbac --role AcrPush --scopes <ACR_ID> --sdk-auth`.
+    - `ACR_LOGIN_SERVER`: e.g. `minimum.azurecr.io`.
+    - (Optional) `ACR_NAME` if deriving login server dynamically.
+
+  - Workflow Steps (simplified)
+    1. Checkout repository source.
+    2. Azure login using service principal (`azure/login`).
+    3. Authenticate to ACR (either via `az acr login` or `docker/login-action`).
+    4. Build Docker image with existing multi-stage `Dockerfile`.
+    5. Tag image twice: `:<git-sha>` and `:latest`.
+    6. Push both tags to ACR.
+    7. Summarize pushed tags for visibility.
+
+  - Tagging Strategy
+    - Immutable: `registry/app:{{ github.sha }}` for precise traceability.
+    - Mutable convenience: `registry/app:latest` for default deployments / quick tests.
+
+  - Minimal Example (conceptual)
+    - Trigger: `on: push: branches: [ main ]` + `workflow_dispatch`.
+    - Uses official actions: `actions/checkout`, `azure/login`, `docker/build-push-action`.
+
+  - Benefits
+    - Eliminates manual local build/push steps.
+    - Reduces risk of “works on my machine” discrepancies.
+    - Provides consistent, auditable artifact generation tied to commit history.
+
+  - Follow-on Opportunities
+    - Add deploy job (e.g., to Azure Web App / Container Apps / AKS) after successful push.
+    - Introduce image security scanning (Trivy / Microsoft Defender). 
+    - Add build cache (GitHub Actions cache or ACR build tasks) for faster builds.
+    - Add semantic version tagging (e.g., `v1.2.3`) if release process formalizes.
+
+  - Outcome
+    - CI pipeline ensures every code change can rapidly produce a runnable, versioned container image in ACR, ready for deployment workflows.
+
+
